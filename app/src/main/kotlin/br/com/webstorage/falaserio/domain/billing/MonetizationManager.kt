@@ -6,6 +6,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * Resultado do processamento de uma compra.
+ */
+sealed class ProcessingResult {
+    object Success : ProcessingResult()
+    data class Error(val message: String) : ProcessingResult()
+}
+
+/**
  * Gerenciador de monetização que processa compras usando a configuração centralizada.
  * 
  * Este manager elimina a necessidade de hardcoding de lógica de produtos,
@@ -20,42 +28,47 @@ class MonetizationManager @Inject constructor(
      * Processa uma compra bem-sucedida aplicando os benefícios do produto.
      * 
      * @param productId ID do produto comprado
-     * @return true se processado com sucesso, false se produto não encontrado
+     * @return ProcessingResult indicando sucesso ou erro
      */
-    suspend fun processPurchase(productId: String): Boolean {
-        val product = MonetizationConfig.getProductById(productId) ?: return false
+    suspend fun processPurchase(productId: String): ProcessingResult {
+        val product = MonetizationConfig.getProductById(productId) 
+            ?: return ProcessingResult.Error("Produto não encontrado")
         
-        return when {
-            // Produto com créditos ilimitados
-            product.isUnlimited -> {
-                creditsRepository.setUnlimitedCredits()
-                if (product.hideAds) {
-                    creditsRepository.setShouldShowAds(false)
-                }
-                true
-            }
-            
-            // Produto de assinatura
-            product.isSubscription -> {
-                product.subscriptionType?.let { subType ->
-                    creditsRepository.setSubscription(subType, showAds = !product.hideAds)
-                    if (product.monthlyCredits > 0) {
-                        creditsRepository.renewMonthlyCredits(product.monthlyCredits)
+        return try {
+            when {
+                // Produto com créditos ilimitados
+                product.isUnlimited -> {
+                    creditsRepository.setUnlimitedCredits()
+                    if (product.hideAds) {
+                        creditsRepository.setShouldShowAds(false)
                     }
-                    true
-                } ?: false
-            }
-            
-            // Produto de créditos simples
-            product.credits > 0 -> {
-                creditsRepository.addCredits(product.credits)
-                if (product.hideAds) {
-                    creditsRepository.setShouldShowAds(false)
+                    ProcessingResult.Success
                 }
-                true
+                
+                // Produto de assinatura
+                product.isSubscription -> {
+                    product.subscriptionType?.let { subType ->
+                        creditsRepository.setSubscription(subType, showAds = !product.hideAds)
+                        if (product.monthlyCredits > 0) {
+                            creditsRepository.renewMonthlyCredits(product.monthlyCredits)
+                        }
+                        ProcessingResult.Success
+                    } ?: ProcessingResult.Error("Tipo de assinatura não definido")
+                }
+                
+                // Produto de créditos simples
+                product.credits > 0 -> {
+                    creditsRepository.addCredits(product.credits)
+                    if (product.hideAds) {
+                        creditsRepository.setShouldShowAds(false)
+                    }
+                    ProcessingResult.Success
+                }
+                
+                else -> ProcessingResult.Error("Configuração de produto inválida")
             }
-            
-            else -> false
+        } catch (e: Exception) {
+            ProcessingResult.Error("Erro ao processar: ${e.message}")
         }
     }
     
@@ -70,7 +83,7 @@ class MonetizationManager @Inject constructor(
         
         purchases.forEach { purchase ->
             purchase.products.forEach { productId ->
-                if (processPurchase(productId)) {
+                if (processPurchase(productId) is ProcessingResult.Success) {
                     processedProducts.add(productId)
                 }
             }

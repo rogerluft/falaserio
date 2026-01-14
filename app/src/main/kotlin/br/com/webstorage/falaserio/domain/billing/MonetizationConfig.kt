@@ -148,23 +148,23 @@ object MonetizationConfig {
         val errors = mutableListOf<String>()
         
         if (product.id.isBlank()) {
-            errors.add("Product ID cannot be blank")
+            errors.add("ID do produto não pode estar vazio")
         }
         
         if (product.isSubscription && product.subscriptionType.isNullOrBlank()) {
-            errors.add("Subscription products must have subscriptionType")
+            errors.add("Produtos de assinatura devem ter subscriptionType")
         }
         
         if (product.isSubscription && product.monthlyCredits <= 0) {
-            errors.add("Subscription products must have monthlyCredits > 0")
+            errors.add("Produtos de assinatura devem ter monthlyCredits > 0")
         }
         
         if (!product.isSubscription && !product.isUnlimited && product.credits <= 0) {
-            errors.add("Non-subscription products must have credits > 0 or be unlimited")
+            errors.add("Produtos não-assinatura devem ter credits > 0 ou ser ilimitados")
         }
         
         if (product.isUnlimited && product.credits > 0) {
-            errors.add("Unlimited products should not specify credits")
+            errors.add("Produtos ilimitados não devem especificar créditos")
         }
         
         return errors
@@ -189,8 +189,8 @@ object MonetizationConfig {
             .keys
         
         duplicateIds.forEach { duplicateId ->
-            validationResults[duplicateId] = (validationResults[duplicateId] ?: emptyList()) + 
-                "Duplicate product ID: $duplicateId"
+            val existingErrors = validationResults[duplicateId] ?: emptyList()
+            validationResults[duplicateId] = existingErrors + "ID de produto duplicado: $duplicateId"
         }
         
         return validationResults

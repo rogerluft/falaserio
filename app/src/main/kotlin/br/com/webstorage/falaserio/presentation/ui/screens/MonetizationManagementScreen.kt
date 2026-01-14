@@ -26,6 +26,11 @@ import br.com.webstorage.falaserio.presentation.ui.theme.Primary
 import br.com.webstorage.falaserio.presentation.ui.theme.SuccessColor
 
 /**
+ * Nome do arquivo de configuração de monetização.
+ */
+private const val MONETIZATION_CONFIG_FILE = "MonetizationConfig.kt"
+
+/**
  * Tela de gerenciamento de produtos de monetização (apenas para desenvolvimento).
  * 
  * Esta tela permite aos desenvolvedores:
@@ -126,7 +131,7 @@ fun MonetizationManagementScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "💡 Para adicionar/editar/remover produtos, modifique o arquivo MonetizationConfig.kt",
+                    "💡 Para adicionar/editar/remover produtos, modifique o arquivo $MONETIZATION_CONFIG_FILE",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.fillMaxWidth()
@@ -181,7 +186,7 @@ private fun StatusCard(
             }
             
             Spacer(modifier = Modifier.height(12.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(
@@ -241,7 +246,7 @@ private fun InstructionsCard() {
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            InstructionItem("✅ Adicionar: Adicione nova entrada em MonetizationConfig.ALL_PRODUCTS")
+            InstructionItem("✅ Adicionar: Adicione nova entrada em $MONETIZATION_CONFIG_FILE")
             InstructionItem("✏️ Editar: Modifique as propriedades do produto existente")
             InstructionItem("🗑️ Remover: Remova a entrada da lista (cuidado com compras existentes)")
             InstructionItem("📍 Popular: Defina isPopular = true para destacar na loja")

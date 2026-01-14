@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import br.com.webstorage.falaserio.data.repository.CreditsRepository
 import br.com.webstorage.falaserio.domain.billing.BillingManager
 import br.com.webstorage.falaserio.domain.billing.MonetizationManager
+import br.com.webstorage.falaserio.domain.billing.ProcessingResult
 import br.com.webstorage.falaserio.domain.billing.ProductInfo
 import com.android.billingclient.api.ProductDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -71,15 +72,22 @@ class CreditsViewModel @Inject constructor(
 
             val result = billingManager.purchase(activity, productDetails)
 
-            if (result.isSuccess) {
-                // Usa o MonetizationManager para processar a compra
-                val processed = monetizationManager.processPurchase(productDetails.productId)
-                if (!processed) {
-                    _purchaseError.value = "Produto não reconhecido: ${productDetails.productId}"
+            result.fold(
+                onSuccess = { purchase ->
+                    // Usa o MonetizationManager para processar a compra
+                    when (val processingResult = monetizationManager.processPurchase(productDetails.productId)) {
+                        is ProcessingResult.Success -> {
+                            // Compra processada com sucesso
+                        }
+                        is ProcessingResult.Error -> {
+                            _purchaseError.value = "Erro no processamento da compra. Tente novamente."
+                        }
+                    }
+                },
+                onFailure = { exception ->
+                    _purchaseError.value = exception.message ?: "Erro na compra"
                 }
-            } else {
-                _purchaseError.value = result.exceptionOrNull()?.message ?: "Erro na compra"
-            }
+            )
 
             _isPurchasing.value = false
         }
