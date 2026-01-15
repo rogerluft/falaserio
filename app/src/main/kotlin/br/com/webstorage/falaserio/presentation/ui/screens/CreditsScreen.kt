@@ -157,6 +157,17 @@ fun CreditsScreen(
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
                 )
             }
+
+            // Botão de Restaurar Compras (Requisito do Review)
+            item {
+                TextButton(
+                    onClick = { viewModel.restorePurchases() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isPurchasing
+                ) {
+                    Text("Restaurar Compras Anteriores")
+                }
+            }
         }
     }
 }
