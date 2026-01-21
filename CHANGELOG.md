@@ -9,11 +9,17 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [0.1.5-alpha] - 2026-01-21
 
-### Compose Previews para Desenvolvimento Visual
+### Compose Previews e Auto-Versioning
 
-Adicionado suporte a previews do Jetpack Compose para desenvolvimento visual no Android Studio.
+Adicionado suporte a previews do Jetpack Compose e versionamento automatico baseado em Git.
 
 ### Adicionado
+
+- **Auto-Versioning via Git** - Versionamento automatico no build.gradle.kts:
+  - `versionCode` = numero total de commits (`git rev-list --count HEAD`)
+  - `versionName` = versao + hash do commit (ex: `0.1.5-alpha+abc1234`)
+  - Elimina necessidade de incrementar versao manualmente
+  - Cada build tem identificador unico rastreavel
 
 - **HomeScreen Previews** - 3 estados visuais:
   - Idle (pronto para gravar)
@@ -30,6 +36,7 @@ Adicionado suporte a previews do Jetpack Compose para desenvolvimento visual no 
 
 ### Tecnico
 
+- Funcoes `getGitCommitCount()` e `getGitHash()` em build.gradle.kts
 - Criados composables stateless `*Content` para suporte a preview
 - Imports de `@Preview` e `FalaSerioTheme` adicionados
 
