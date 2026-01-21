@@ -14,8 +14,8 @@ android {
         applicationId = "br.com.webstorage.falaserio"
         minSdk = 24 // Android 7.0 - suporte total às APIs de áudio modernas
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "0.1.4-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

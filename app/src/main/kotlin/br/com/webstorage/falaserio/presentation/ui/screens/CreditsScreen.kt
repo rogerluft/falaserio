@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.webstorage.falaserio.BuildConfig
 import br.com.webstorage.falaserio.domain.billing.MonetizationConfig
 import br.com.webstorage.falaserio.presentation.ui.theme.Accent
 import br.com.webstorage.falaserio.presentation.ui.theme.ErrorColor
@@ -167,6 +168,17 @@ fun CreditsScreen(
                 ) {
                     Text("Restaurar Compras Anteriores")
                 }
+            }
+
+            // Versão do Build
+            item {
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp)
+                )
             }
         }
     }
