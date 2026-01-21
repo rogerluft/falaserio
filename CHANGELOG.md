@@ -7,6 +7,81 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.1.4-alpha] - 2026-01-21
+
+### Modulo de Gestao de Monetizacao Aprimorado
+
+Melhorias significativas no modulo de gestao de monetizacao para desenvolvedores.
+
+### Adicionado
+
+#### Configuracao Centralizada de Anuncios (AdsConfig.kt)
+
+- **AdsConfig.kt** - Novo arquivo de configuracao centralizada de ads
+    - Documentacao completa com links para docs oficiais do AdMob
+    - IDs de teste do Google pre-configurados
+    - Placeholders para IDs de producao
+    - `IS_TEST_MODE` toggle para alternar entre teste/producao
+    - Configuracoes de comportamento:
+        - Intervalo entre intersticiais (120s default)
+        - Acoes antes de mostrar ad (3 default)
+        - Creditos por rewarded ad (1 default)
+        - Limite diario de rewarded ads (5 default)
+        - Toggles de banner por tela (Home, History, Credits)
+        - Delay inicial antes do primeiro ad (30s)
+    - Configuracoes de privacidade (GDPR/LGPD)
+    - Validacao automatica de configuracao
+    - Funcao `getStatusSummary()` para debug
+
+#### Tela de Gestao Aprimorada (MonetizationManagementScreen.kt)
+
+- **Nova arquitetura com Tabs**
+    - Tab "Produtos" - gestao de produtos (existente)
+    - Tab "Anuncios" - nova gestao de ads
+    - Badge de alerta quando ha erros de configuracao
+
+- **Tab de Anuncios** inclui:
+    - Status card com modo (Teste/Producao) e consentimento
+    - Card de links uteis com documentacao oficial do AdMob
+    - Instrucoes passo-a-passo para configurar producao
+    - Visualizacao dos IDs configurados
+    - Visualizacao do comportamento dos ads
+    - Validacao automatica com exibicao de erros
+
+#### Documentacao
+
+- **MONETIZATION_MODULE_ANALYSIS.md** - Analise completa do modulo
+    - Arquitetura atual documentada
+    - Funcionalidades cobertas vs limitacoes
+    - Produtos configurados
+    - Melhorias planejadas (roadmap)
+    - Referencias e links uteis
+
+### Arquivos Novos
+
+```
+app/src/main/kotlin/br/com/webstorage/falaserio/domain/ads/
+    AdsConfig.kt                    # Configuracao centralizada de ads
+
+MONETIZATION_MODULE_ANALYSIS.md     # Documentacao do modulo
+```
+
+### Arquivos Modificados
+
+```
+app/src/main/kotlin/br/com/webstorage/falaserio/presentation/ui/screens/
+    MonetizationManagementScreen.kt  # Adicionada tab de Anuncios
+```
+
+### Colaboradores
+
+| Contribuidor | Papel |
+|--------------|-------|
+| Claudio (Claude AI) | Implementacao e documentacao |
+| Roger Luft | Especificacao e revisao |
+
+---
+
 ## [0.1.0-alpha] - 2025-01-08
 
 ### 🎉 Release Inicial - Arquitetura Completa

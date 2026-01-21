@@ -1,1 +1,0 @@
--keep,allowobfuscation,allowshrinking class br.com.webstorage.falaserio.presentation.viewmodel.HistoryViewModel
