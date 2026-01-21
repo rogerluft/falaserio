@@ -7,8 +7,8 @@ plugins {
 }
 
 // Auto-generate versionCode from git commit count
-fun getGitCommitCount(): Int {
-    return try {
+val gitVersionCode: Int by lazy {
+    try {
         val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
             .directory(projectDir)
             .redirectErrorStream(true)
@@ -20,8 +20,8 @@ fun getGitCommitCount(): Int {
 }
 
 // Get short git hash for versionName suffix
-fun getGitHash(): String {
-    return try {
+val gitHash: String by lazy {
+    try {
         val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
             .directory(projectDir)
             .redirectErrorStream(true)
@@ -31,9 +31,6 @@ fun getGitHash(): String {
         "unknown"
     }
 }
-
-val gitVersionCode = getGitCommitCount()
-val gitHash = getGitHash()
 
 android {
     namespace = "br.com.webstorage.falaserio"
