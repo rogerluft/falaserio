@@ -13,8 +13,6 @@ import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
-import com.android.billingclient.ktx.queryProductDetails
-import com.android.billingclient.ktx.queryPurchasesAsync
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -83,9 +81,21 @@ class BillingManager @Inject constructor(
             SUBS_PRODUCTS.map { QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.SUBS).build() }
         ).build()
 
-        // Usando as funções suspend KTX diretamente - o jeito certo.
-        val inAppProducts = billingClient.queryProductDetails(inAppParams).productDetailsList ?: emptyList()
-        val subProducts = billingClient.queryProductDetails(subsParams).productDetailsList ?: emptyList()
+        val inAppProducts = suspendCancellableCoroutine { continuation ->
+            billingClient.queryProductDetailsAsync(inAppParams) { billingResult, productDetailsList ->
+                if (continuation.isActive) {
+                    continuation.resume(productDetailsList ?: emptyList())
+                }
+            }
+        }
+
+        val subProducts = suspendCancellableCoroutine { continuation ->
+            billingClient.queryProductDetailsAsync(subsParams) { billingResult, productDetailsList ->
+                if (continuation.isActive) {
+                    continuation.resume(productDetailsList ?: emptyList())
+                }
+            }
+        }
 
         return@withContext inAppProducts + subProducts
     }
@@ -158,17 +168,27 @@ class BillingManager @Inject constructor(
     suspend fun restorePurchases(): List<Purchase> = withContext(Dispatchers.IO) {
         if (!ensureConnection()) return@withContext emptyList()
 
-        val inAppPurchases = billingClient.queryPurchasesAsync(
-            QueryPurchasesParams.newBuilder()
+        val inAppPurchases = suspendCancellableCoroutine { continuation ->
+            val params = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
-        ).purchasesList
+            billingClient.queryPurchasesAsync(params) { _, purchases ->
+                if (continuation.isActive) {
+                    continuation.resume(purchases)
+                }
+            }
+        }
 
-        val subsPurchases = billingClient.queryPurchasesAsync(
-            QueryPurchasesParams.newBuilder()
+        val subsPurchases = suspendCancellableCoroutine { continuation ->
+            val params = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
-        ).purchasesList
+            billingClient.queryPurchasesAsync(params) { _, purchases ->
+                if (continuation.isActive) {
+                    continuation.resume(purchases)
+                }
+            }
+        }
 
         return@withContext (inAppPurchases + subsPurchases).filter {
             it.purchaseState == Purchase.PurchaseState.PURCHASED

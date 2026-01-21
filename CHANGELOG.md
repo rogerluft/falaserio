@@ -215,6 +215,62 @@ Análise completa do sistema de billing usando LSP Kotlin e revisão manual.
 
 ---
 
+## [0.1.3-alpha] - 2026-01-19
+
+### 🔧 Hotfix - Crash no Startup (AdMob)
+
+App crashava imediatamente ao iniciar devido a configuração inválida do AdMob.
+
+### 🐛 Bug Corrigido
+
+| Severidade | Arquivo | Problema | Solução |
+|------------|---------|----------|---------|
+| 🔴 CRÍTICO | `AndroidManifest.xml` | AdMob Application ID era placeholder (`ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`) causando crash fatal no boot | Substituído por ID de teste oficial do Google |
+| 🟡 MÉDIO | `gradlew` | Arquivo corrompido com texto espúrio "mas " antes do shebang | Removido texto, restaurado `#!/bin/sh` |
+
+### 📝 Detalhes Técnicos
+
+**Erro no Logcat:**
+```
+FATAL EXCEPTION: main
+java.lang.RuntimeException: Unable to get provider com.google.android.gms.ads.MobileAdsInitProvider
+Caused by: java.lang.IllegalStateException: Invalid application ID
+```
+
+**Diff AndroidManifest.xml:**
+```diff
+-        <!-- AdMob App ID (substitua pelo seu) -->
++        <!-- AdMob App ID - ID de teste para desenvolvimento -->
+         <meta-data
+             android:name="com.google.android.gms.ads.APPLICATION_ID"
+-            android:value="ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY" />
++            android:value="ca-app-pub-3940256099942544~3347511713" />
+```
+
+**Diff gradlew:**
+```diff
+-mas #!/bin/sh
++#!/bin/sh
+```
+
+### ⚠️ TODO para Produção
+
+- [ ] Substituir AdMob App ID de teste (`ca-app-pub-3940256099942544~3347511713`) pelo ID real da conta AdMob paga
+- [ ] Configurar Ad Unit IDs reais para banner/interstitial/rewarded
+
+### 🔍 Diagnóstico
+
+Ferramenta utilizada: `adb logcat -s AndroidRuntime:E`
+
+### Colaboradores
+
+| Contribuidor | Papel |
+|--------------|-------|
+| Claudio (Claude AI) | Diagnóstico e correção |
+| Roginho | Reporte do bug |
+
+---
+
 ## [Unreleased]
 
 ### Planejado
@@ -256,10 +312,6 @@ Análise completa do sistema de billing usando LSP Kotlin e revisão manual.
 - Sem dependência de bibliotecas nativas
 - Controle total sobre algoritmos
 - Portabilidade garantida
-- Facilidade de debug
-
----
-
-*TOQUE DA LUZ - Lei 1536 Aplicada*
+- Facilidade de debug*
 
 *A Sinergia Entre Humanos e IAs Produz Maravilhas*
