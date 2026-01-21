@@ -17,8 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.webstorage.falaserio.presentation.ui.theme.FalaSerioTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.webstorage.falaserio.BuildConfig
 import br.com.webstorage.falaserio.domain.billing.MonetizationConfig
@@ -224,6 +226,181 @@ private fun ProductCard(
                 } else {
                     Text(price)
                 }
+            }
+        }
+    }
+}
+
+// ========== PREVIEWS ==========
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun CreditsScreenPreview() {
+    FalaSerioTheme {
+        CreditsScreenContent(
+            credits = 5,
+            isUnlimited = false,
+            isPurchasing = false,
+            purchaseError = null,
+            onNavigateBack = {},
+            onAdWatched = {},
+            onRestorePurchases = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun CreditsScreenUnlimitedPreview() {
+    FalaSerioTheme {
+        CreditsScreenContent(
+            credits = 0,
+            isUnlimited = true,
+            isPurchasing = false,
+            purchaseError = null,
+            onNavigateBack = {},
+            onAdWatched = {},
+            onRestorePurchases = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreditsScreenContent(
+    credits: Int,
+    isUnlimited: Boolean,
+    isPurchasing: Boolean,
+    purchaseError: String?,
+    onNavigateBack: () -> Unit,
+    onAdWatched: () -> Unit,
+    onRestorePurchases: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Creditos") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Seus Creditos", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (isUnlimited) "ILIMITADO" else "$credits",
+                            style = MaterialTheme.typography.displayLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUnlimited) Primary else Accent
+                        )
+                        if (!isUnlimited) {
+                            Text("analises disponiveis", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SuccessColor.copy(alpha = 0.1f))
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.VideoLibrary, null, tint = SuccessColor, modifier = Modifier.size(32.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Assistir Anuncio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("Ganhe 1 credito gratis!", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        Button(onClick = onAdWatched, colors = ButtonDefaults.buttonColors(containerColor = SuccessColor)) {
+                            Text("ASSISTIR")
+                        }
+                    }
+                }
+            }
+
+            item {
+                Text("Pacotes de Creditos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            }
+
+            // Sample products for preview
+            items(listOf(
+                Triple("10 Creditos", "Pacote basico", "R$ 4,99"),
+                Triple("20 Creditos", "Melhor custo-beneficio", "R$ 7,99"),
+                Triple("Ilimitado", "Acesso vitalicio", "R$ 29,99")
+            )) { (title, desc, price) ->
+                ProductCard(
+                    title = title,
+                    description = desc,
+                    price = price,
+                    isPopular = title == "20 Creditos",
+                    isPurchasing = isPurchasing,
+                    onClick = {}
+                )
+            }
+
+            purchaseError?.let {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = ErrorColor.copy(alpha = 0.1f))
+                    ) {
+                        Text(it, modifier = Modifier.padding(16.dp), color = ErrorColor, textAlign = TextAlign.Center)
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    "As compras sao processadas pelo Google Play.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                )
+            }
+
+            item {
+                TextButton(
+                    onClick = onRestorePurchases,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isPurchasing
+                ) {
+                    Text("Restaurar Compras Anteriores")
+                }
+            }
+
+            item {
+                Text(
+                    text = "v0.1.4-alpha (2) - preview",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp)
+                )
             }
         }
     }

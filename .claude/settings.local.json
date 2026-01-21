@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew clean:*)",
+      "Bash(echo:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(ls:*)",
+      "Bash(adb devices:*)",
+      "Bash(adb logcat:*)",
+      "Bash(./gradlew installDebug:*)",
+      "Bash(adb shell am start:*)",
+      "Bash(adb shell pm list packages:*)",
+      "Bash(adb shell monkey:*)",
+      "Bash(./gradlew:*)"
+    ]
+  }
+}

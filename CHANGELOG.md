@@ -7,6 +7,34 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.1.5-alpha] - 2026-01-21
+
+### Compose Previews para Desenvolvimento Visual
+
+Adicionado suporte a previews do Jetpack Compose para desenvolvimento visual no Android Studio.
+
+### Adicionado
+
+- **HomeScreen Previews** - 3 estados visuais:
+  - Idle (pronto para gravar)
+  - Recording (gravando com amplitude)
+  - Result (mostrando resultado de stress)
+
+- **CreditsScreen Previews** - 2 estados visuais:
+  - Normal (com creditos limitados)
+  - Unlimited (acesso ilimitado)
+
+- **Build Version Indicator** - Indicador de versao no rodape da CreditsScreen
+  - Exibe: versionName, versionCode e buildType
+  - Permite verificar se o build corresponde ao codigo
+
+### Tecnico
+
+- Criados composables stateless `*Content` para suporte a preview
+- Imports de `@Preview` e `FalaSerioTheme` adicionados
+
+---
+
 ## [0.1.4-alpha] - 2026-01-21
 
 ### Modulo de Gestao de Monetizacao Aprimorado
