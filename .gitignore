@@ -25,3 +25,10 @@ google-services.json
 
 # Skills (Claude Code)
 *.skill
+
+# Temp files
+*.tmp
+*.tmp
+
+# App build
+app/build/
