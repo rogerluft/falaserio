@@ -6,6 +6,35 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// Auto-generate versionCode from git commit count
+fun getGitCommitCount(): Int {
+    return try {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .directory(projectDir)
+            .redirectErrorStream(true)
+            .start()
+        process.inputStream.bufferedReader().readText().trim().toIntOrNull() ?: 1
+    } catch (e: Exception) {
+        1
+    }
+}
+
+// Get short git hash for versionName suffix
+fun getGitHash(): String {
+    return try {
+        val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+            .directory(projectDir)
+            .redirectErrorStream(true)
+            .start()
+        process.inputStream.bufferedReader().readText().trim()
+    } catch (e: Exception) {
+        "unknown"
+    }
+}
+
+val gitVersionCode = getGitCommitCount()
+val gitHash = getGitHash()
+
 android {
     namespace = "br.com.webstorage.falaserio"
     compileSdk = 35
@@ -14,8 +43,8 @@ android {
         applicationId = "br.com.webstorage.falaserio"
         minSdk = 24 // Android 7.0 - suporte total às APIs de áudio modernas
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.1.5-alpha"
+        versionCode = gitVersionCode
+        versionName = "0.1.5-alpha+$gitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

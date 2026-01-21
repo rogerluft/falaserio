@@ -11,7 +11,9 @@
       "Bash(adb shell am start:*)",
       "Bash(adb shell pm list packages:*)",
       "Bash(adb shell monkey:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: add pre-commit hook for auto versionCode increment\n\n- Creates .githooks/pre-commit script\n- Auto-increments versionCode on every commit\n- Ensures build version always reflects code changes\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
