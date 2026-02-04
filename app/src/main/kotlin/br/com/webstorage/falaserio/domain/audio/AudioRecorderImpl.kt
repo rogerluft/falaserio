@@ -33,6 +33,7 @@ import javax.inject.Singleton
  * 1. Uso de CoroutineScope dedicado para evitar deadlock no start()
  * 2. Gravação direta em disco (FileOutputStream) para evitar OutOfMemory
  * 3. Header Patching para WAV (sem carregar áudio na RAM)
+ * 4. Otimização de memória: Reuso de buffers (ByteBuffer e FloatArray) no loop de gravação
  */
 @Singleton
 class AudioRecorderImpl @Inject constructor(
@@ -108,7 +109,9 @@ class AudioRecorderImpl @Inject constructor(
 
     private suspend fun recordAudioLoop() {
         val buffer = ShortArray(bufferSize / 2)
+        // Otimização: Pre-alocação de buffers para evitar GC no loop
         val byteBuffer = ByteBuffer.allocate(buffer.size * 2).order(ByteOrder.LITTLE_ENDIAN)
+        val floatSamples = FloatArray(buffer.size)
 
         try {
             FileOutputStream(tempPcmFile).use { fos ->
@@ -124,8 +127,12 @@ class AudioRecorderImpl @Inject constructor(
                         _currentAmplitude.value = (rms / Short.MAX_VALUE).toFloat().coerceIn(0f, 1f)
 
                         // 2. Emitir samples para análise VSA (opcional/tempo real)
-                        val floatSamples =
-                            FloatArray(readCount) { i -> buffer[i].toFloat() / Short.MAX_VALUE }
+                        // NOTA: Reutilizamos o floatSamples. Se houver múltiplos consumidores
+                        // assíncronos, isso pode ser instável, mas como o Flow não é usado no momento,
+                        // priorizamos performance.
+                        for (i in 0 until readCount) {
+                            floatSamples[i] = buffer[i].toFloat() / Short.MAX_VALUE
+                        }
                         _audioSamples.tryEmit(floatSamples)
 
                         // 3. Escrever no disco (PCM) - SEM BOXING!
