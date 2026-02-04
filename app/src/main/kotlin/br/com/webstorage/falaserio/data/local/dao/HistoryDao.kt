@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HistoryDao {
 
-    @Query("SELECT * FROM history ORDER BY createdAt DESC")
+    @Query("SELECT * FROM history ORDER BY createdAt DESC LIMIT 100")
     fun getAllHistory(): Flow<List<HistoryEntity>>
 
     @Query("SELECT * FROM history WHERE id = :id")
