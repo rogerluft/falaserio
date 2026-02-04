@@ -4,7 +4,9 @@ import android.media.MediaMetadataRetriever
 import br.com.webstorage.falaserio.data.local.dao.HistoryDao
 import br.com.webstorage.falaserio.data.local.entity.HistoryEntity
 import br.com.webstorage.falaserio.domain.model.VsaMetrics
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,9 +48,9 @@ class HistoryRepository @Inject constructor(
         return historyDao.insert(entity)
     }
 
-    private fun getDuration(file: File): Long {
+    private suspend fun getDuration(file: File): Long = withContext(Dispatchers.IO) {
         val retriever = MediaMetadataRetriever()
-        return try {
+        try {
             retriever.setDataSource(file.absolutePath)
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             time?.toLongOrNull() ?: 0L
@@ -62,10 +64,12 @@ class HistoryRepository @Inject constructor(
     suspend fun delete(history: HistoryEntity) {
         historyDao.delete(history)
         // Também deletar o arquivo de áudio
-        try {
-            File(history.filePath).delete()
-        } catch (e: Exception) {
-            // Ignorar se não conseguir deletar
+        withContext(Dispatchers.IO) {
+            try {
+                File(history.filePath).delete()
+            } catch (e: Exception) {
+                // Ignorar se não conseguir deletar
+            }
         }
     }
 
