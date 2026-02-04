@@ -308,12 +308,75 @@ class VsaAnalyzer @Inject constructor() {
     }
 
     /**
-     * FFT simplificada (DFT para arrays pequenos).
+     * FFT implementation (Cooley-Tukey algorithm).
+     * Input signal size must be a power of 2.
      */
     private fun fft(signal: FloatArray): FloatArray {
         val n = signal.size
-        val magnitude = FloatArray(n / 2)
+        // Verifica se n é potência de 2. Se não for, usa DFT (fallback)
+        if (n == 0 || (n and (n - 1)) != 0) {
+            return dft(signal)
+        }
 
+        val real = signal.copyOf()
+        val imag = FloatArray(n)
+
+        // Bit-reversal permutation
+        var j = 0
+        for (i in 0 until n) {
+            if (i < j) {
+                val tempReal = real[i]
+                real[i] = real[j]
+                real[j] = tempReal
+            }
+            var m = n shr 1
+            while (m >= 1 && j >= m) {
+                j -= m
+                m = m shr 1
+            }
+            j += m
+        }
+
+        // Cooley-Tukey iterative FFT
+        var len = 2
+        while (len <= n) {
+            val ang = 2.0 * PI / len
+            val wlenReal = cos(ang).toFloat()
+            val wlenImag = (-sin(ang)).toFloat()
+            for (i in 0 until n step len) {
+                var wReal = 1f
+                var wImag = 0f
+                for (k in 0 until len / 2) {
+                    val uReal = real[i + k]
+                    val uImag = imag[i + k]
+                    val vReal = real[i + k + len / 2] * wReal - imag[i + k + len / 2] * wImag
+                    val vImag = real[i + k + len / 2] * wImag + imag[i + k + len / 2] * wReal
+                    real[i + k] = uReal + vReal
+                    imag[i + k] = uImag + vImag
+                    real[i + k + len / 2] = uReal - vReal
+                    imag[i + k + len / 2] = uImag - vImag
+                    val nextWReal = wReal * wlenReal - wImag * wlenImag
+                    wImag = wReal * wlenImag + wImag * wlenReal
+                    wReal = nextWReal
+                }
+            }
+            len = len shl 1
+        }
+
+        // Calculate magnitude for the first n/2 bins
+        val magnitude = FloatArray(n / 2)
+        for (i in 0 until n / 2) {
+            magnitude[i] = sqrt(real[i] * real[i] + imag[i] * imag[i])
+        }
+        return magnitude
+    }
+
+    /**
+     * Fallback DFT implementation for non-power-of-2 arrays.
+     */
+    private fun dft(signal: FloatArray): FloatArray {
+        val n = signal.size
+        val magnitude = FloatArray(n / 2)
         for (k in 0 until n / 2) {
             var real = 0f
             var imag = 0f
@@ -324,7 +387,6 @@ class VsaAnalyzer @Inject constructor() {
             }
             magnitude[k] = sqrt(real * real + imag * imag)
         }
-
         return magnitude
     }
 
