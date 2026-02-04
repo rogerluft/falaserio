@@ -108,6 +108,7 @@ class AudioRecorderImpl @Inject constructor(
 
     private suspend fun recordAudioLoop() {
         val buffer = ShortArray(bufferSize / 2)
+        val byteBuffer = ByteBuffer.allocate(buffer.size * 2).order(ByteOrder.LITTLE_ENDIAN)
 
         try {
             FileOutputStream(tempPcmFile).use { fos ->
@@ -128,12 +129,11 @@ class AudioRecorderImpl @Inject constructor(
                         _audioSamples.tryEmit(floatSamples)
 
                         // 3. Escrever no disco (PCM) - SEM BOXING!
-                        val byteBuffer =
-                            ByteBuffer.allocate(readCount * 2).order(ByteOrder.LITTLE_ENDIAN)
+                        byteBuffer.clear()
                         for (i in 0 until readCount) {
                             byteBuffer.putShort(buffer[i])
                         }
-                        fos.write(byteBuffer.array())
+                        fos.write(byteBuffer.array(), 0, readCount * 2)
                     }
                 }
             }
