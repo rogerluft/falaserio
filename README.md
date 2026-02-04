@@ -297,6 +297,26 @@ Os resultados da análise de stress vocal:
 
 ---
 
+## 🤖 Code Review e CI/CD
+
+### Revisores Automáticos Ativos
+
+| Bot               | Status     | Função                                   | Trigger          |
+|-------------------|------------|------------------------------------------|------------------|
+| **Jules**         | ✅ Ativo   | Assistente de código do Google Labs      | @jules           |
+| **GitHub Copilot**| ✅ Ativo   | Revisor automático de PRs                | Automático       |
+| **Gemini CLI**    | ⏸️ Manual  | Análise de código sob demanda            | @gemini-cli      |
+
+### Como Usar
+
+- **Jules**: Comente `@jules` em uma PR para pedir ajuda ou correções
+- **Copilot**: Revisa automaticamente toda PR aberta
+- **Gemini**: Comente `@gemini-cli /review` para revisão manual (evita gasto de quota)
+
+📖 **Documentação completa:** Veja [GEMINI_DESABILITADO.md](GEMINI_DESABILITADO.md)
+
+---
+
 ## 📄 Licença
 
 Código proprietário © 2025 WebStorage Tecnologia.
