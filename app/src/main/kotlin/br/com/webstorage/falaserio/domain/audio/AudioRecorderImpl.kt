@@ -107,7 +107,11 @@ class AudioRecorderImpl @Inject constructor(
     }
 
     private suspend fun recordAudioLoop() {
-        val buffer = ShortArray(bufferSize / 2)
+        val bufferSizeShorts = bufferSize / 2
+        val buffer = ShortArray(bufferSizeShorts)
+        val floatSamplesReusable = FloatArray(bufferSizeShorts)
+        val byteBufferReusable =
+            ByteBuffer.allocate(bufferSizeShorts * 2).order(ByteOrder.LITTLE_ENDIAN)
 
         try {
             FileOutputStream(tempPcmFile).use { fos ->
@@ -117,23 +121,23 @@ class AudioRecorderImpl @Inject constructor(
                         // 1. Calcular Amplitude (RMS)
                         var sum = 0.0
                         for (i in 0 until readCount) {
-                            sum += buffer[i] * buffer[i]
+                            sum += buffer[i].toDouble() * buffer[i].toDouble()
                         }
                         val rms = kotlin.math.sqrt(sum / readCount)
                         _currentAmplitude.value = (rms / Short.MAX_VALUE).toFloat().coerceIn(0f, 1f)
 
                         // 2. Emitir samples para análise VSA (opcional/tempo real)
-                        val floatSamples =
-                            FloatArray(readCount) { i -> buffer[i].toFloat() / Short.MAX_VALUE }
-                        _audioSamples.tryEmit(floatSamples)
+                        for (i in 0 until readCount) {
+                            floatSamplesReusable[i] = buffer[i].toFloat() / Short.MAX_VALUE
+                        }
+                        _audioSamples.tryEmit(floatSamplesReusable.copyOf(readCount))
 
                         // 3. Escrever no disco (PCM) - SEM BOXING!
-                        val byteBuffer =
-                            ByteBuffer.allocate(readCount * 2).order(ByteOrder.LITTLE_ENDIAN)
+                        byteBufferReusable.clear()
                         for (i in 0 until readCount) {
-                            byteBuffer.putShort(buffer[i])
+                            byteBufferReusable.putShort(buffer[i])
                         }
-                        fos.write(byteBuffer.array())
+                        fos.write(byteBufferReusable.array(), 0, readCount * 2)
                     }
                 }
             }
