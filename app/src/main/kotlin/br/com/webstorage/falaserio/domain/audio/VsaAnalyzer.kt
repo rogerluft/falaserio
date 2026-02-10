@@ -48,12 +48,15 @@ class VsaAnalyzer @Inject constructor() {
         val frames = extractFrames(samples)
         if (frames.isEmpty()) return@withContext VsaMetrics.empty()
 
+        // Pré-calcular pitches (F0) para evitar redundância
+        val pitches = frames.map { detectPitch(it) }
+
         // Calcular cada métrica
         val microTremor = calculateMicroTremor(frames)
-        val pitchVariation = calculatePitchVariation(frames)
-        val jitter = calculateJitter(frames)
+        val pitchVariation = calculatePitchVariation(pitches)
+        val jitter = calculateJitter(pitches)
         val shimmer = calculateShimmer(frames)
-        val hnr = calculateHNR(frames)
+        val hnr = calculateHNR(frames, pitches)
 
         // Calcular score geral de stress (0-100)
         val overallStress = calculateOverallStress(
@@ -169,15 +172,10 @@ class VsaAnalyzer @Inject constructor() {
     }
 
     /**
-     * Calcula variação de pitch (F0) via autocorrelação.
+     * Calcula variação de pitch (F0) usando pitches pré-calculados.
      */
-    private fun calculatePitchVariation(frames: List<FloatArray>): Float {
-        val pitches = mutableListOf<Float>()
-
-        for (frame in frames) {
-            val pitch = detectPitch(frame)
-            if (pitch > 0) pitches.add(pitch)
-        }
+    private fun calculatePitchVariation(allPitches: List<Float>): Float {
+        val pitches = allPitches.filter { it > 0 }
 
         if (pitches.size < 2) return 12f // Valor neutro
 
@@ -214,17 +212,10 @@ class VsaAnalyzer @Inject constructor() {
     }
 
     /**
-     * Calcula Jitter (variação ciclo-a-ciclo do período).
+     * Calcula Jitter (variação ciclo-a-ciclo do período) usando pitches pré-calculados.
      */
-    private fun calculateJitter(frames: List<FloatArray>): Float {
-        val periods = mutableListOf<Float>()
-
-        for (frame in frames) {
-            val pitch = detectPitch(frame)
-            if (pitch > 0) {
-                periods.add(1000f / pitch) // Período em ms
-            }
-        }
+    private fun calculateJitter(allPitches: List<Float>): Float {
+        val periods = allPitches.filter { it > 0 }.map { 1000f / it }
 
         if (periods.size < 3) return 0.8f // Valor neutro
 
@@ -265,16 +256,16 @@ class VsaAnalyzer @Inject constructor() {
     }
 
     /**
-     * Calcula HNR (Harmonic-to-Noise Ratio) em dB.
+     * Calcula HNR (Harmonic-to-Noise Ratio) em dB usando pitches pré-calculados.
      */
-    private fun calculateHNR(frames: List<FloatArray>): Float {
+    private fun calculateHNR(frames: List<FloatArray>, allPitches: List<Float>): Float {
         val hnrValues = mutableListOf<Float>()
 
-        for (frame in frames) {
-            val pitch = detectPitch(frame)
+        for (i in frames.indices) {
+            val pitch = allPitches[i]
             if (pitch > 0) {
                 val period = (SAMPLE_RATE / pitch).toInt()
-                val hnr = calculateFrameHNR(frame, period)
+                val hnr = calculateFrameHNR(frames[i], period)
                 if (hnr.isFinite()) hnrValues.add(hnr)
             }
         }
