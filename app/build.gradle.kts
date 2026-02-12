@@ -41,7 +41,7 @@ android {
         minSdk = 24 // Android 7.0 - suporte total às APIs de áudio modernas
         targetSdk = 35
         versionCode = gitVersionCode
-        versionName = "0.1.5-alpha+$gitHash"
+        versionName = "1.0.0-rc1+$gitHash"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -50,8 +50,27 @@ android {
         }
     }
 
+    // Signing configuration for release builds
+    // TODO: Set environment variables before building release:
+    //   FALASERIO_KEYSTORE_PATH=/path/to/keystore.jks
+    //   FALASERIO_KEYSTORE_PASSWORD=your_password
+    //   FALASERIO_KEY_ALIAS=falaserio
+    //   FALASERIO_KEY_PASSWORD=your_password
+    signingConfigs {
+        create("release") {
+            storeFile = System.getenv("FALASERIO_KEYSTORE_PATH")?.let { file(it) }
+            storePassword = System.getenv("FALASERIO_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("FALASERIO_KEY_ALIAS") ?: "falaserio"
+            keyPassword = System.getenv("FALASERIO_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            // Use signing config if environment variables are set
+            if (System.getenv("FALASERIO_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -144,6 +163,10 @@ dependencies {
 
     // ========== ACCOMPANIST (Permissões) ==========
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // ========== PROCESSAMENTO DE ÁUDIO ==========
+    // TarsosDSP não disponível no Maven/JitPack - usando implementação manual
+    // implementation("com.github.JorenSix:TarsosDSP:v2.5")
 
     // ========== CORE ==========
     implementation("androidx.core:core-ktx:1.15.0")

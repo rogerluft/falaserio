@@ -32,10 +32,9 @@ google-services.json
 
 # App build
 app/build/
-
-# Docs internos (decisões, prompts, etc)
 /docs/
-
+docs
+# Docs internos (decisões, prompts, etc)
 # Patterns ofuscados (NUNCA commitar)
 patterns.bin
 patterns.txt

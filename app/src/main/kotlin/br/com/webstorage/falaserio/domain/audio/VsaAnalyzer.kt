@@ -25,9 +25,13 @@ import kotlin.math.sqrt
  * 3. Jitter
  * 4. Shimmer
  * 5. HNR (Harmonic-to-Noise Ratio)
+ *
+ * (Tarefa 1.6: Integrado com AudioPreprocessor para filtros de ruído)
  */
 @Singleton
-class VsaAnalyzer @Inject constructor() {
+class VsaAnalyzer @Inject constructor(
+    private val preprocessor: AudioPreprocessor
+) {
 
     companion object {
         const val SAMPLE_RATE = 44100
@@ -44,8 +48,11 @@ class VsaAnalyzer @Inject constructor() {
         val samples = readWavFile(file)
         if (samples.isEmpty()) return@withContext VsaMetrics.empty()
 
-        // Dividir em frames com overlap
-        val frames = extractFrames(samples)
+        // Pré-processamento: Filtros e Noise Gate (Tarefa 1.6)
+        val processedSamples = preprocessor.preprocess(samples, SAMPLE_RATE)
+
+        // Dividir em frames com overlap usando samples processados
+        val frames = extractFrames(processedSamples)
         if (frames.isEmpty()) return@withContext VsaMetrics.empty()
 
         // Pré-calcular pitches (F0) para evitar redundância
@@ -383,6 +390,8 @@ class VsaAnalyzer @Inject constructor() {
 
     /**
      * Calcula score geral de stress baseado nas 5 métricas.
+     * (Tarefa 1.1: Removido fator aleatório - Decisão 1)
+     * (Tarefa 1.2: Divisores reduzidos para agressividade máxima - Decisão 2)
      */
     private fun calculateOverallStress(
         microTremor: Float,
@@ -391,12 +400,12 @@ class VsaAnalyzer @Inject constructor() {
         shimmer: Float,
         hnr: Float
     ): Float {
-        // Normalizar cada métrica para 0-100
-        val tremorScore = ((microTremor - 8f) / 4f * 100f).coerceIn(0f, 100f)
-        val pitchScore = ((pitchVariation - 10f) / 30f * 100f).coerceIn(0f, 100f)
-        val jitterScore = (jitter / 3f * 100f).coerceIn(0f, 100f)
-        val shimmerScore = (shimmer / 10f * 100f).coerceIn(0f, 100f)
-        val hnrScore = ((25f - hnr) / 15f * 100f).coerceIn(0f, 100f)
+        // Normalizar cada métrica para 0-100 (Agressividade Máxima - Decisão 2)
+        val tremorScore = ((microTremor - 8f) / 3f * 100f).coerceIn(0f, 100f)
+        val pitchScore = ((pitchVariation - 10f) / 20f * 100f).coerceIn(0f, 100f)
+        val jitterScore = (jitter / 2f * 100f).coerceIn(0f, 100f)
+        val shimmerScore = (shimmer / 7f * 100f).coerceIn(0f, 100f)
+        val hnrScore = ((25f - hnr) / 10f * 100f).coerceIn(0f, 100f)
 
         // Média ponderada (micro-tremor tem mais peso)
         val weighted = (
@@ -407,9 +416,7 @@ class VsaAnalyzer @Inject constructor() {
                         hnrScore * 0.15f
                 )
 
-        // Adicionar fator aleatório sutil para entretenimento (±5%)
-        val randomFactor = (Math.random() * 10 - 5).toFloat()
-
-        return (weighted + randomFactor).coerceIn(0f, 100f)
+        // Deterministico: mesma entrada = mesma saida (Decisão 1)
+        return weighted.coerceIn(0f, 100f)
     }
 }

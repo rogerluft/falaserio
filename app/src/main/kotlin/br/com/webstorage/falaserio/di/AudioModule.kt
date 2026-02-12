@@ -1,8 +1,10 @@
 package br.com.webstorage.falaserio.di
 
 import android.content.Context
+import br.com.webstorage.falaserio.domain.audio.AudioPreprocessor
 import br.com.webstorage.falaserio.domain.audio.AudioRecorder
 import br.com.webstorage.falaserio.domain.audio.AudioRecorderImpl
+import br.com.webstorage.falaserio.domain.audio.VsaAnalyzer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,6 +21,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AudioModule {
+
+    @Provides
+    @Singleton
+    fun provideAudioPreprocessor(): AudioPreprocessor {
+        return AudioPreprocessor()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVsaAnalyzer(preprocessor: AudioPreprocessor): VsaAnalyzer {
+        return VsaAnalyzer(preprocessor)
+    }
 
     @Provides
     @Singleton

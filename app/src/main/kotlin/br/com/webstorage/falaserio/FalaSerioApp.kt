@@ -1,6 +1,7 @@
 package br.com.webstorage.falaserio
 
 import android.app.Application
+import android.content.Context
 import br.com.webstorage.falaserio.data.repository.CreditsRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -22,6 +23,27 @@ import kotlinx.coroutines.launch
 class FalaSerioApp : Application() {
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    companion object {
+        private const val PREFS_NAME = "falaserio_prefs"
+        private const val KEY_FIRST_RUN = "is_first_run"
+
+        /**
+         * Verifica se é a primeira execução do app.
+         */
+        fun isFirstRun(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(KEY_FIRST_RUN, true)
+        }
+
+        /**
+         * Marca que o app já foi executado.
+         */
+        fun setFirstRunComplete(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(KEY_FIRST_RUN, false).apply()
+        }
+    }
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
