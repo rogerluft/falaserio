@@ -7,6 +7,25 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+
+## [1.0.0-rc1] - 2026-02-12
+
+### Play Store Release Candidate
+
+#### Segurança e Assinatura
+- APK release assinado e validado com `apksigner` (Signature Scheme v2)
+- Guia atualizado para uso do `apksigner` (KEYSTORE_GUIDE.md)
+- Scripts de ambiente para keystore (setup-keystore-env.sh/ps1)
+
+#### Build
+- Build release 100% Play Store ready (ProGuard/R8, lint, assinatura, versionamento)
+- APK testado e validado em dispositivo real
+
+#### Documentação
+- CHECKLIST_LANCAMENTO.md atualizado com status e próximos passos
+- Guia de keystore revisado
+
+---
 ## [0.1.5-alpha] - 2026-01-21
 
 ### Compose Previews e Auto-Versioning

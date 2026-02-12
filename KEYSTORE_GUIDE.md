@@ -82,10 +82,11 @@ Depois execute: `source ~/.bashrc`
 ## ✅ Passo 5: Verificar Assinatura
 
 ```bash
-# Verificar se APK está assinado corretamente
-jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+# Verificar se APK está assinado corretamente (Play Store)
+"$ANDROID_HOME/build-tools/34.0.0/apksigner.bat" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
 
-# Deve aparecer: "jar verified."
+# Deve aparecer: "Verified using v2 scheme (APK Signature Scheme v2): true"
+# e os dados do certificado (CN, SHA-256, etc)
 ```
 
 ---
@@ -132,7 +133,7 @@ jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
 - [ ] Variáveis de ambiente configuradas
 - [ ] Teste de build release bem-sucedido
 - [ ] `.jks` está no `.gitignore` (já configurado)
-- [ ] APK assinado verificado com `jarsigner`
+- [ ] APK assinado verificado com `apksigner` (Signature Scheme v2)
 
 ---
 
