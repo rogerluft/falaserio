@@ -30,7 +30,8 @@ import kotlin.math.sqrt
  */
 @Singleton
 class VsaAnalyzer @Inject constructor(
-    private val preprocessor: AudioPreprocessor
+    private val preprocessor: AudioPreprocessor,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
 
     companion object {
@@ -389,9 +390,77 @@ class VsaAnalyzer @Inject constructor(
     }
 
     /**
-     * Calcula score geral de stress baseado nas 5 métricas.
-     * (Tarefa 1.1: Removido fator aleatório - Decisão 1)
-     * (Tarefa 1.2: Divisores reduzidos para agressividade máxima - Decisão 2)
+     * Salva as métricas fornecidas como calibração base nas preferências.
+     */
+    fun saveCalibration(metrics: VsaMetrics) {
+        val prefs = context.getSharedPreferences("vsa_calibration", android.content.Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            putBoolean("has_calibration", true)
+            putFloat("baseline_micro_tremor", metrics.microTremor)
+            putFloat("baseline_pitch_variation", metrics.pitchVariation)
+            putFloat("baseline_jitter", metrics.jitter)
+            putFloat("baseline_shimmer", metrics.shimmer)
+            putFloat("baseline_hnr", metrics.hnr)
+            apply()
+        }
+    }
+
+    /**
+     * Limpa a calibração de voz existente.
+     */
+    fun clearCalibration() {
+        val prefs = context.getSharedPreferences("vsa_calibration", android.content.Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+    }
+
+    /**
+     * Verifica se existe calibração salva.
+     */
+    fun hasCalibration(): Boolean {
+        val prefs = context.getSharedPreferences("vsa_calibration", android.content.Context.MODE_PRIVATE)
+        return prefs.getBoolean("has_calibration", false)
+    }
+
+    /**
+     * Obtém os limites (thresholds) de comparação com base na calibração se ela existir.
+     */
+    private fun getBaselineThresholds(): BaselineThresholds {
+        val prefs = context.getSharedPreferences("vsa_calibration", android.content.Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("has_calibration", false)) {
+            return BaselineThresholds(
+                microTremorThreshold = 11f,
+                pitchVariationThreshold = 20f,
+                jitterThreshold = 2f,
+                shimmerThreshold = 6f,
+                hnrThreshold = 15f
+            )
+        }
+        val mt = prefs.getFloat("baseline_micro_tremor", 9.5f)
+        val pv = prefs.getFloat("baseline_pitch_variation", 12f)
+        val jt = prefs.getFloat("baseline_jitter", 0.8f)
+        val sh = prefs.getFloat("baseline_shimmer", 2f)
+        val hnr = prefs.getFloat("baseline_hnr", 20f)
+
+        return BaselineThresholds(
+            microTremorThreshold = mt + 0.8f,
+            pitchVariationThreshold = pv * 1.3f,
+            jitterThreshold = jt * 1.5f,
+            shimmerThreshold = sh * 1.5f,
+            hnrThreshold = (hnr - 4f).coerceAtLeast(10f)
+        )
+    }
+
+    private data class BaselineThresholds(
+        val microTremorThreshold: Float,
+        val pitchVariationThreshold: Float,
+        val jitterThreshold: Float,
+        val shimmerThreshold: Float,
+        val hnrThreshold: Float
+    )
+
+    /**
+     * Calcula o score geral de Verdade (0-100%) baseado nas 5 métricas.
+     * Inicia em 50 e soma ou subtrai conforme cada item indica stress ou calmaria.
      */
     private fun calculateOverallStress(
         microTremor: Float,
@@ -400,23 +469,24 @@ class VsaAnalyzer @Inject constructor(
         shimmer: Float,
         hnr: Float
     ): Float {
-        // Normalizar cada métrica para 0-100 (Agressividade Máxima - Decisão 2)
-        val tremorScore = ((microTremor - 8f) / 3f * 100f).coerceIn(0f, 100f)
-        val pitchScore = ((pitchVariation - 10f) / 20f * 100f).coerceIn(0f, 100f)
-        val jitterScore = (jitter / 2f * 100f).coerceIn(0f, 100f)
-        val shimmerScore = (shimmer / 7f * 100f).coerceIn(0f, 100f)
-        val hnrScore = ((25f - hnr) / 10f * 100f).coerceIn(0f, 100f)
+        val thresholds = getBaselineThresholds()
+        var score = 50f
 
-        // Média ponderada (micro-tremor tem mais peso)
-        val weighted = (
-                tremorScore * 0.30f +
-                        pitchScore * 0.20f +
-                        jitterScore * 0.20f +
-                        shimmerScore * 0.15f +
-                        hnrScore * 0.15f
-                )
+        // Micro-Tremor (peso 15): menor frequência no envelope = menos stress (verdade)
+        if (microTremor < thresholds.microTremorThreshold) score += 15f else score -= 15f
 
-        // Deterministico: mesma entrada = mesma saida (Decisão 1)
-        return weighted.coerceIn(0f, 100f)
+        // Pitch Variation (peso 10): menor variação = voz firme (verdade)
+        if (pitchVariation < thresholds.pitchVariationThreshold) score += 10f else score -= 10f
+
+        // Jitter (peso 10): menor jitter = voz estável (verdade)
+        if (jitter < thresholds.jitterThreshold) score += 10f else score -= 10f
+
+        // Shimmer (peso 7.5): menor shimmer = amplitude estável (verdade)
+        if (shimmer < thresholds.shimmerThreshold) score += 7.5f else score -= 7.5f
+
+        // HNR (peso 7.5): maior HNR = voz mais clara, sem ruídos e tremor de mentira
+        if (hnr > thresholds.hnrThreshold) score += 7.5f else score -= 7.5f
+
+        return score.coerceIn(0f, 100f)
     }
 }

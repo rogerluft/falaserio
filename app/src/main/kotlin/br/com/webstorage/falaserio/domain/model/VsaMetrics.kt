@@ -39,13 +39,13 @@ data class VsaMetrics(
     val hnrIndicatesStress: Boolean get() = hnr < HNR_THRESHOLD
 
     /**
-     * Retorna descrição textual do nível de stress
+     * Retorna descrição textual da estimativa de verdade (rótulos de entretenimento).
      */
     fun getStressLevel(): String = when {
-        overallStressScore >= 80 -> "Muito Alto"
-        overallStressScore >= 60 -> "Alto"
-        overallStressScore >= 40 -> "Moderado"
-        overallStressScore >= 20 -> "Baixo"
-        else -> "Muito Baixo"
+        overallStressScore >= 80 -> "Não há dúvidas (Profeta Divino)"
+        overallStressScore >= 60 -> "Acredito no amigo"
+        overallStressScore >= 40 -> "Plausível (Ele acredita, faz sentido)"
+        overallStressScore >= 20 -> "Pinóquio"
+        else -> "Mentira Absoluta (Professor do Forrest Gump)"
     }
 }

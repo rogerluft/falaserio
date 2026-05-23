@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.webstorage.falaserio.data.local.entity.HistoryEntity
@@ -39,7 +42,9 @@ import br.com.webstorage.falaserio.presentation.ui.theme.Accent
 import br.com.webstorage.falaserio.presentation.ui.theme.ErrorColor
 import br.com.webstorage.falaserio.presentation.ui.theme.Primary
 import br.com.webstorage.falaserio.presentation.ui.theme.Secondary
+import androidx.compose.ui.graphics.Color
 import br.com.webstorage.falaserio.presentation.viewmodel.HistoryViewModel
+import br.com.webstorage.falaserio.presentation.viewmodel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,14 +53,15 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(
     onNavigateBack: () -> Unit,
-    viewModel: HistoryViewModel = hiltViewModel()
+    viewModel: HistoryViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val historyList by viewModel.historyList.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("📜 Histórico") },
+                title = { Text("📜 Histórico de Análises") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -68,7 +74,6 @@ fun HistoryScreen(
         }
     ) { padding ->
         if (historyList.isEmpty()) {
-            // Estado vazio
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -84,12 +89,12 @@ fun HistoryScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Nenhuma análise ainda",
+                        text = "Nenhuma análise registrada",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Faça sua primeira gravação!",
+                        text = "Grave ou selecione um áudio para começar!",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -109,7 +114,11 @@ fun HistoryScreen(
                 ) { history ->
                     HistoryCard(
                         history = history,
-                        onDelete = { viewModel.deleteHistory(history.id) }
+                        onDelete = { viewModel.deleteHistory(history.id) },
+                        onReanalyze = {
+                            mainViewModel.reanalyzeRecording(history.id)
+                            onNavigateBack()
+                        }
                     )
                 }
             }
@@ -120,7 +129,8 @@ fun HistoryScreen(
 @Composable
 private fun HistoryCard(
     history: HistoryEntity,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onReanalyze: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
 
@@ -135,7 +145,7 @@ private fun HistoryCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Header com data e delete
+            // Header com data, reanalisar e delete
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -147,16 +157,34 @@ private fun HistoryCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(24.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Deletar",
-                        tint = ErrorColor.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp)
-                    )
+                    // Reanalisar
+                    IconButton(
+                        onClick = onReanalyze,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Reanalisar",
+                            tint = Accent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    // Deletar
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Deletar",
+                            tint = ErrorColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
@@ -174,9 +202,10 @@ private fun HistoryCard(
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
                         color = when {
-                            history.overallStressScore >= 70 -> Secondary
-                            history.overallStressScore >= 40 -> Accent
-                            else -> Primary
+                            history.overallStressScore >= 80 -> Primary // Verdade
+                            history.overallStressScore >= 60 -> Accent
+                            history.overallStressScore >= 40 -> Color(0xFFFACC15) // Yellow
+                            else -> ErrorColor // Mentira / Pinóquio
                         }
                     )
                     Text(
@@ -193,6 +222,7 @@ private fun HistoryCard(
                     MetricRow("Tremor", history.microTremor, "Hz")
                     MetricRow("Pitch", history.pitchVariation, "%")
                     MetricRow("Jitter", history.jitter, "%")
+                    MetricRow("Shimmer", history.shimmer, "%")
                 }
             }
         }

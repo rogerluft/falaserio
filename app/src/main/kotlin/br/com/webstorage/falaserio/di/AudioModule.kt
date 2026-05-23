@@ -30,8 +30,11 @@ object AudioModule {
 
     @Provides
     @Singleton
-    fun provideVsaAnalyzer(preprocessor: AudioPreprocessor): VsaAnalyzer {
-        return VsaAnalyzer(preprocessor)
+    fun provideVsaAnalyzer(
+        preprocessor: AudioPreprocessor,
+        @ApplicationContext context: Context
+    ): VsaAnalyzer {
+        return VsaAnalyzer(preprocessor, context)
     }
 
     @Provides
